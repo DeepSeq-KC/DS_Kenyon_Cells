@@ -1,1 +1,3 @@
-data/Aerts_Fly_AdultBrain_Filtered_57k.loom
+data/*
+.DS_Store
+notebook/.ipynb_checkpoints/0_loading_loom_data_R-checkpoint.ipynb
