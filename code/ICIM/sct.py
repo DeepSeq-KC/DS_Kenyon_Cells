@@ -433,6 +433,10 @@ class TSNE():
 
             C = self.df_libs.loc[self.df.columns]["Tissue.type.color"]
 
+        elif colorMode == "Age":
+
+            C = self.df_libs.loc[self.df.columns]["Age"]
+
         elif colorMode == "custom":
 
             C = colorBy
