@@ -14,7 +14,7 @@ exon_map <- read.csv("./data/06_tss_data/exon_local_coords.csv") %>%
 df <- df %>%
   mutate(coord = as.integer(as.character(coord))) %>%
   mutate(back_coord = as.integer(as.character(back_coord))) %>%
-  mutate(facet = factor(facet, levels=c("Exon Map", "Read Mappings")))
+  mutate(facet = factor(facet, levels=c("Exon Map", "Read Mappings"))) %>%
   left_join(meta) %>%
   mutate(Age = factor(Age, levels=c("0", "1", "3", "6", "9", "15", "30", "50"))) %>%
   mutate(Gender = factor(Gender)) %>%
@@ -60,11 +60,11 @@ server <- function(input, output) {
   output$last_exon <- renderggiraph({
     
     t_exon_map <- exon_map %>%
-      filter(gene_id == v$gene)
+      filter(symbol == v$gene)
 
     
     gg <- df %>%
-      filter(contig == v$gene) %>%
+      filter(symbol == v$gene) %>%
       ggplot() +
       geom_point(aes_string(x=v$xvar, y='coord', color=v$cvar), position='jitter') +
       geom_segment(data=t_exon_map, mapping=aes(x="Map", xend="Map", y=coord, yend=back_coord), size=2, color='orange', alpha=.6) +
