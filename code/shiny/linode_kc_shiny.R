@@ -13,7 +13,6 @@ exon_map <- read.csv("./data/06_tss_data/exon_local_coords.csv") %>%
 
 df <- df %>%
   mutate(coord = as.integer(as.character(coord))) %>%
-  mutate(back_coord = as.integer(as.character(back_coord))) %>%
   mutate(facet = factor(facet, levels=c("Exon Map", "Read Mappings"))) %>%
   left_join(meta) %>%
   mutate(Age = factor(Age, levels=c("0", "1", "3", "6", "9", "15", "30", "50"))) %>%
@@ -32,7 +31,8 @@ ui <- fluidPage(
            selectizeInput("gene","Gene of Interest", sort(unique(df$symbol)), selected = "nAChRalpha1"),
            selectInput("xvar", "X-Axis", var_of_int, selected="Age"),
            selectInput("cvar", "Color By", var_of_int, selected="Age"),
-           actionButton("apply", "Apply")
+           actionButton("apply", "Apply"),
+           downloadButton('downloadPlot', 'Download Plot')
     ),    
     column(width=10,
            ggiraphOutput("last_exon")
@@ -54,13 +54,22 @@ server <- function(input, output) {
     
   })
   
-  
 
-  
+
   output$last_exon <- renderggiraph({
     
+    max_exon <- df %>%
+      filter(symbol == v$gene) %>%
+      select(coord) %>%
+      max()
+    min_exon <- df %>%
+      filter(symbol == v$gene) %>%
+      select(coord) %>%
+      min()
     t_exon_map <- exon_map %>%
-      filter(symbol == v$gene)
+      filter(symbol == v$gene) %>%
+      filter(coord >= min_exon) %>%
+      filter(coord <= max_exon)
 
     
     gg <- df %>%
@@ -74,7 +83,40 @@ server <- function(input, output) {
     
     ggiraph(code = print(gg))
   })
+  
+  plotInput = reactive({
+    max_exon <- df %>%
+      filter(symbol == v$gene) %>%
+      select(coord) %>%
+      max()
+    min_exon <- df %>%
+      filter(symbol == v$gene) %>%
+      select(coord) %>%
+      min()
+    t_exon_map <- exon_map %>%
+      filter(symbol == v$gene) %>%
+      filter(coord >= min_exon) %>%
+      filter(coord <= max_exon)
+    
+    
+    gg <- df %>%
+      filter(symbol == v$gene) %>%
+      ggplot() +
+      geom_point(aes_string(x=v$xvar, y='coord', color=v$cvar), position='jitter') +
+      geom_segment(data=t_exon_map, mapping=aes(x="Map", xend="Map", y=coord, yend=back_coord), size=2, color='orange', alpha=.6) +
+      facet_grid(.~facet, space = "free", scales = "free") +
+      theme_bw() +
+      ylab("Gene Coordinates")
+    return(gg)
+  })
+  
+  output$downloadPlot <- downloadHandler(
+    filename = function() { paste(input$gene, '.pdf', sep='') },
+    content = function(file) { ggsave(file, plotInput(), "pdf") }
+  )
 }
+
+
 
 runApp(list(ui=ui,server=server),host="172.104.22.51",port=5001)
 
