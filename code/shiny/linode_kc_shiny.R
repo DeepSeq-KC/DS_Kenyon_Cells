@@ -106,7 +106,8 @@ server <- function(input, output) {
       geom_segment(data=t_exon_map, mapping=aes(x="Map", xend="Map", y=coord, yend=back_coord), size=2, color='orange', alpha=.6) +
       facet_grid(.~facet, space = "free", scales = "free") +
       theme_bw() +
-      ylab("Gene Coordinates")
+      ylab("Gene Coordinates") +
+      ggtitle(v$gene)
     return(gg)
   })
   
